@@ -2,6 +2,7 @@ var peerConnection;
 var uuid;
 var serverConnection;
 var img = this;
+var data = this;
 
 var peerConnectionConfig = {
   'iceServers': [
@@ -12,6 +13,7 @@ var peerConnectionConfig = {
 
 //================================================================================
 // Startup functions
+//================================================================================
 
 function pageReady() { //Runs when page finished loading html
   uuid = createUUID();
@@ -37,14 +39,16 @@ function start(isCaller) { //Runs when button is clicked or remote connection is
 
     console.log('Fetching image from server.');
     src = "ubuntu-logo.png";
-    img = document.createElement("img");
+    img = new Image();
+    img.onload = function(){ //Draw image when loaded
+      document.body.appendChild(img);
+    };
     img.src = src;
-    img.width = 119;
-    img.height = 99;
-    img.alt = "Image!";
-    document.body.appendChild(img);
 
-console.log("img:", img);
+    data = new Blob([img]);
+
+    console.log('img', img);
+    console.log('data', data);
 
     dataChannel = peerConnection.createDataChannel('image');
     console.log('Data channel created: ', dataChannel);
@@ -55,6 +59,7 @@ console.log("img:", img);
 
 //================================================================================
 // Connection establishment
+//================================================================================
 
 function gotMessageFromServer(message) {
   if(!peerConnection){ //Not initiator.
@@ -110,12 +115,13 @@ function errorHandler(error) {
 }
 
 //================================================================================
-// Data channel 
+// Data channel
+//================================================================================
 
 function dataChannelOpen(){ //Data channel open, send data.
   console.log("dataChannel open.");
 
-let fruits = [66346, 123213]
+  
 
   dataChannel.send(fruits);
 }
@@ -140,6 +146,8 @@ function rMessage(event){ //Receiver got message
 console.log(event.data[0]);
 }
 
+//================================================================================
+// Misc
 //================================================================================
 
 // Taken from http://stackoverflow.com/a/105074/515584
