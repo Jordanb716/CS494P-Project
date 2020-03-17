@@ -1,10 +1,6 @@
-var localVideo;
-var localStream;
-var remoteVideo;
 var peerConnection;
 var uuid;
 var serverConnection;
-var src;
 var img = this;
 
 var peerConnectionConfig = {
@@ -14,7 +10,10 @@ var peerConnectionConfig = {
   ]
 };
 
-function pageReady() {
+//================================================================================
+// Startup functions
+
+function pageReady() { //Runs when page finished loading html
   uuid = createUUID();
 
   localVideo = document.getElementById('localVideo');
@@ -22,34 +21,12 @@ function pageReady() {
 
   serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
   serverConnection.onmessage = gotMessageFromServer;
-
-/*
-  var constraints = {
-    video: true,
-    audio: true,
-  };
-
-  if(navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
-  } else {
-    alert('Your browser does not support getUserMedia API');
-  }
-*/
-
 }
 
-/*
-function getUserMediaSuccess(stream) {
-  localStream = stream;
-  localVideo.srcObject = stream;
-}
-*/
-
-function start(isCaller) {
+function start(isCaller) { //Runs when button is clicked or remote connection is detected.
   peerConnection = new RTCPeerConnection(peerConnectionConfig);
   peerConnection.onicecandidate = gotIceCandidate;
   peerConnection.ontrack = gotRemoteStream;
-  //peerConnection.addStream(localStream);
 
   peerConnection.ondatachannel = receiveDataChannel;
 
@@ -76,33 +53,8 @@ console.log("img:", img);
   }
 }
 
-function dataChannelOpen(){
-  console.log("dataChannel open.");
-
-let fruits = [66346, 123213]
-
-  dataChannel.send(fruits);
-}
-
-function receiveDataChannel(event){
-  rDataChannel = event.channel;
-  console.log("rDataChannel created.", rDataChannel);
-  rDataChannel.onmessage = rMessage;
-  rDataChannel.onopen = function(){console.log("rDataChannel open.");}
-  rDataChannel.onclose = function(){console.log("rDataChannel closed.");}
-}
-
-function rMessage(event){
-  console.log('Got rMessage.', event.data);
-  img = document.createElement("img");
-  img.src = event.data;
-  img.width = 119;
-  img.height = 99;
-  img.alt = "Image!";
-  document.body.appendChild(img);
-
-console.log(event.data[0]);
-}
+//================================================================================
+// Connection establishment
 
 function gotMessageFromServer(message) {
   if(!peerConnection){ //Not initiator.
@@ -156,6 +108,39 @@ function gotRemoteStream(event) {
 function errorHandler(error) {
   console.log(error);
 }
+
+//================================================================================
+// Data channel 
+
+function dataChannelOpen(){ //Data channel open, send data.
+  console.log("dataChannel open.");
+
+let fruits = [66346, 123213]
+
+  dataChannel.send(fruits);
+}
+
+function receiveDataChannel(event){ //Create receiver side data channel
+  rDataChannel = event.channel;
+  console.log("rDataChannel created.", rDataChannel);
+  rDataChannel.onmessage = rMessage;
+  rDataChannel.onopen = function(){console.log("rDataChannel open.");}
+  rDataChannel.onclose = function(){console.log("rDataChannel closed.");}
+}
+
+function rMessage(event){ //Receiver got message
+  console.log('Got rMessage.', event.data);
+  img = document.createElement("img");
+  img.src = event.data;
+  img.width = 119;
+  img.height = 99;
+  img.alt = "Image!";
+  document.body.appendChild(img);
+
+console.log(event.data[0]);
+}
+
+//================================================================================
 
 // Taken from http://stackoverflow.com/a/105074/515584
 // Strictly speaking, it's not a real UUID, but it gets the job done here
