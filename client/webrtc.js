@@ -38,17 +38,31 @@ function start(isCaller) { //Runs when button is clicked or remote connection is
     .catch(errorHandler);
 
     console.log('Fetching image from server.');
-    src = "ubuntu-logo.png";
-    img = new Image();
-    img.onload = function(){ //Draw image when loaded
-      document.body.appendChild(img);
+    image = "ubuntu-logo.png";
+    
+    var reqInit = {
+      method: 'GET'
     };
-    img.src = src;
 
-    data = new Blob([img]);
+    var request = new Request(image, reqInit);
 
-    console.log('img', img);
-    console.log('data', data);
+    fetch(request)
+    .then((response) => {
+      return response.blob();
+    })
+    .then((blob) => {
+      img = new Image();
+      img.src = URL.createObjectURL(blob);
+      document.body.appendChild(img);
+
+      data = blob;
+
+      console.log('img', img);
+      console.log('data', data);
+    })
+    .catch((error) => {
+      console.log('Fetch error', error);
+    });
 
     dataChannel = peerConnection.createDataChannel('image');
     console.log('Data channel created: ', dataChannel);
@@ -120,10 +134,7 @@ function errorHandler(error) {
 
 function dataChannelOpen(){ //Data channel open, send data.
   console.log("dataChannel open.");
-
-  
-
-  dataChannel.send(fruits);
+  dataChannel.send(data);
 }
 
 function receiveDataChannel(event){ //Create receiver side data channel
@@ -136,14 +147,11 @@ function receiveDataChannel(event){ //Create receiver side data channel
 
 function rMessage(event){ //Receiver got message
   console.log('Got rMessage.', event.data);
-  img = document.createElement("img");
-  img.src = event.data;
-  img.width = 119;
-  img.height = 99;
-  img.alt = "Image!";
+  var blob = new Blob([event.data])
+  img = new Image();
+  img.src = URL.createObjectURL(blob);
   document.body.appendChild(img);
-
-console.log(event.data[0]);
+  console.log("Received data size: ", blob.size);
 }
 
 //================================================================================
