@@ -1,6 +1,7 @@
 var peerConnection;
 var uuid;
 var serverConnection;
+var dataChannel = this;
 var img = this;
 var data = this;
 
@@ -23,22 +24,32 @@ function pageReady() { //Runs when page finished loading html
 
   serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
   serverConnection.onmessage = gotMessageFromServer;
+
+  var btn = document.getElementById("start");
+  btn.disabled = false;
+  var btn = document.getElementById("sendButton");
+  btn.disabled = true;
 }
 
 function start(isCaller) { //Runs when button is clicked or remote connection is detected.
   peerConnection = new RTCPeerConnection(peerConnectionConfig);
   peerConnection.onicecandidate = gotIceCandidate;
-  peerConnection.ontrack = gotRemoteStream;
 
   peerConnection.ondatachannel = receiveDataChannel;
 
+  var btn = document.getElementById("start");
+  btn.disabled = true;
+
   if(isCaller) {
+    var header = document.getElementById("header")
+      .innerHTML = "Connected as host! Ready to send data...";
+
     peerConnection.createOffer()
     .then(createdDescription)
     .catch(errorHandler);
 
     console.log('Fetching image from server.');
-    image = "XDF.png";
+    var image = "XDF.png";
     
     var reqInit = {
       method: 'GET'
@@ -68,6 +79,10 @@ function start(isCaller) { //Runs when button is clicked or remote connection is
     console.log('Data channel created: ', dataChannel);
     dataChannel.onopen = dataChannelOpen;
     dataChannel.onclose = function(){console.log("dataChannel closed.");}
+  }
+  else{
+    var header = document.getElementById("header")
+      .innerHTML = "Connected to host! Awaiting data...";
   }
 }
 
@@ -119,11 +134,6 @@ function createdDescription(description) {
   }).catch(errorHandler);
 }
 
-function gotRemoteStream(event) {
-  console.log('got remote stream');
-  remoteVideo.srcObject = event.streams[0];
-}
-
 function errorHandler(error) {
   console.log(error);
 }
@@ -134,10 +144,19 @@ function errorHandler(error) {
 
 function dataChannelOpen(){ //Data channel open, send data.
   console.log("dataChannel open.");
-  dataChannel.send(data);
+  console.log('dataSize', data.size);
+  console.log('Connection', peerConnection.remoteDescription);
+
+peerConnection.getStats().then((stats => {console.log(stats)}));
+
+  var btn = document.getElementById("sendButton");
+  btn.disabled = false;
 }
 
 function receiveDataChannel(event){ //Create receiver side data channel
+  var btn = document.getElementById("start");
+  btn.disabled = true;
+
   rDataChannel = event.channel;
   console.log("rDataChannel created.", rDataChannel);
   rDataChannel.onmessage = rMessage;
@@ -152,6 +171,16 @@ function rMessage(event){ //Receiver got message
   img.src = URL.createObjectURL(blob);
   document.body.appendChild(img);
   console.log("Received data size: ", blob.size);
+
+  var header = document.getElementById("header")
+    .innerHTML = "Received data!";
+}
+
+function sendData(){
+  console.log('Sending data.')
+  dataChannel.send(data);
+  var header = document.getElementById("header")
+    .innerHTML = "Data sent!";
 }
 
 //================================================================================

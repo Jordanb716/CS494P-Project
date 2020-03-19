@@ -7,7 +7,15 @@
 
   <body>
 
-    <input type="button" id="start" onclick="start(true)" value="Connect"></input>
+    <button type="button" id="start" onclick="start(true)">Connect</button>
+
+    <button type="button" id=sendButton onclick="sendData()" disabled ="true">Send</button>
+
+    </br>
+
+    <h1 id="header">Awaiting connection...</h1>
+
+    </br>
 
     <script type="text/javascript">
         pageReady();
