@@ -27,6 +27,9 @@ const handleRequest = function(request, response) {
   } else if(request.url === '/ubuntu-logo.png') {
     response.writeHead(200, {'Content-Type': 'image/png'});
     response.end(fs.readFileSync('client/ubuntu-logo.png'));
+  } else if(request.url === '/XDF.png') {
+    response.writeHead(200, {'Content-Type': 'image/png'});
+    response.end(fs.readFileSync('client/XDF.png'));
   }
   
 };

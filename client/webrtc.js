@@ -38,7 +38,7 @@ function start(isCaller) { //Runs when button is clicked or remote connection is
     .catch(errorHandler);
 
     console.log('Fetching image from server.');
-    image = "ubuntu-logo.png";
+    image = "XDF.png";
     
     var reqInit = {
       method: 'GET'
