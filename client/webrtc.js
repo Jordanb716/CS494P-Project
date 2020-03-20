@@ -1,9 +1,13 @@
+const maxDataSize = 64000;
+
 var peerConnection;
 var uuid;
 var serverConnection;
 var dataChannel = this;
-var img = this;
+var img;
 var data = this;
+var dataMode = this;
+var dataArray = new Array();
 
 var peerConnectionConfig = {
   'iceServers': [
@@ -166,8 +170,12 @@ function receiveDataChannel(event){ //Create receiver side data channel
 
 function rMessage(event){ //Receiver got message
   console.log('Got rMessage.', event.data);
-  var blob = new Blob([event.data])
-  img = new Image();
+
+  dataArray.push(event.data);
+  var blob = new Blob(dataArray);
+
+  if(!img)
+    img = new Image();
   img.src = URL.createObjectURL(blob);
   document.body.appendChild(img);
   console.log("Received data size: ", blob.size);
@@ -178,7 +186,18 @@ function rMessage(event){ //Receiver got message
 
 function sendData(){
   console.log('Sending data.')
-  dataChannel.send(data);
+
+  if(data.size >= maxDataSize){
+    console.log("Sending multipart");
+    for(i = 0; i <= data.size/maxDataSize; i++){
+      var dataSlice = data.slice(i*maxDataSize, (i+1)*maxDataSize);
+      console.log('sliceSize', dataSlice.size);
+      dataChannel.send(dataSlice);
+    }
+  }
+  else
+    dataChannel.send(data);
+
   var header = document.getElementById("header")
     .innerHTML = "Data sent!";
 }
